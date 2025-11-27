@@ -1,0 +1,4 @@
+northwind.duckdb
+*.ducktape
+*.db
+*.sql
