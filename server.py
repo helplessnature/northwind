@@ -1,26 +1,17 @@
-from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel
+from fastapi import FastAPI
 import duckdb
 
-DB = "northwind.duckdb"
+app = FastAPI()
 
-app = FastAPI(title="Northwind DuckDB API")
+DB_PATH = "/app/northwind.duckdb"
 
-# DuckDB 연결 (read_only 모드 권장)
-con = duckdb.connect(DB, read_only=True)
-
-
-class QueryRequest(BaseModel):
-    query: str
-
+@app.get("/")
+def root():
+    return {"status": "ok"}
 
 @app.post("/run_query")
-def run_query(req: QueryRequest):
-    try:
-        df = con.execute(req.query).fetchdf()
-        return {
-            "columns": list(df.columns),
-            "rows": df.to_dict(orient="records")
-        }
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+def run_query(body: dict):
+    query = body["query"]
+    con = duckdb.connect(DB_PATH, read_only=True)
+    df = con.execute(query).df()
+    return {"data": df.to_dict(orient="records")}
